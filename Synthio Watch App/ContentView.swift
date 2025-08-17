@@ -24,64 +24,83 @@ struct ContentView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            // The main VStack now aligns its content to the top
             VStack(spacing: 2) {
                 // Header Section
                 HStack {
                     Text("Synthio")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.gray)
-                    
+                        .foregroundStyle(.white).bold()
+                        .font(.system(size: 15))
                     Spacer()
                     
                     VStack(spacing: 0) {
                         Text("Water Resistant")
-                            .font(.system(size: 6, weight: .medium))
-                            .foregroundColor(.blue)
                         Text("Alarm Chronos")
-                            .font(.system(size: 6, weight: .medium))
-                            .foregroundColor(.blue)
                     }
-                    
+                    .font(.system(size: 8))
+                    .foregroundStyle(.blue)
                     Spacer()
                     
                     Text("GS")
-                        .font(.system(size: 15, weight: .bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
                         .foregroundColor(.yellow)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous) // softer corners
+                                .stroke(Color.yellow, lineWidth: 1.8) )
                 }
+                .frame(maxWidth: 170)
+                .font(.system(size: 10))
                 .padding(.horizontal, 8)
-                .padding(.top, 16) // Even more padding to prevent clipping
+                .padding(.top, 16)
                 
                 // Calculator Display
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.black)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.green.opacity(0.8), .cyan.opacity(0.4)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1.5
-                                )
-                        )
-                        .shadow(color: .green.opacity(0.3), radius: 4, x: 0, y: 0)
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
+                Rectangle()
+                    .frame(height: 1)
+
+                HStack(spacing: 4) {
+                    // Display with blinking cursor
+                    HStack {
                         Text(display)
-                            .font(.system(size: min(20, geometry.size.height / 10), weight: .bold, design: .monospaced))
-                            .foregroundColor(.green)
-                            .shadow(color: .green.opacity(0.5), radius: 1, x: 0, y: 0)
-                            .scaleEffect(isAnimating ? 1.05 : 1.0)
-                            .animation(.easeInOut(duration: 0.1), value: isAnimating)
+                            .foregroundColor(.black)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        
+                        // blinking block cursor
+                        BlinkingCursor()
                     }
-                    .padding(.horizontal, 6)
+                    .frame(height: geometry.size.height * 0.15)
+                    .frame(maxWidth: .infinity, alignment: .leading) // 🔥 left align
+                    .padding(.leading, 6)
+                    .background(Color.gray.opacity(0.3).mix(with: .green, by: 0.2))
+                    .cornerRadius(0)
+
+                    // Vertical text on the right
+                    VStack(spacing: 1) {
+                        Text("A")
+                        Text("D")
+                        Text("J")
+                        Text("□")
+                        Text("□")
+                        Text("M")
+                        Text("O")
+                        Text("D")
+                        Text("E")
+                        Text("/")
+                        Text("C")
+                    }
+                    .font(.system(size: 2, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 14)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(2)
+                    .frame(height: geometry.size.height * 0.15)
                 }
-                .frame(height: geometry.size.height * 0.15)
                 .padding(.horizontal, 4)
-                
+
+                Rectangle()
+                    .frame(height: 1)
+
                 // Button Grid
                 VStack(spacing: 2) {
                     ForEach(Array(buttons.enumerated()), id: \.offset) { rowIndex, row in
@@ -91,32 +110,26 @@ struct ContentView: View {
                                     symbol: symbol,
                                     buttonType: getButtonType(symbol),
                                     isSpecialWidth: symbol == "0" && rowIndex == 4,
-                                    availableHeight: (geometry.size.height * 0.65 - 10) / 5 // Further reduced space for buttons
+                                    availableHeight: (geometry.size.height * 0.65 - 10) / 5
                                 ) {
                                     buttonTapped(symbol)
                                 }
                             }
                         }
                     }
+                    Rectangle()
+                        .frame(height: 1)
+
                 }
                 .padding(.horizontal, 4)
                 .padding(.bottom, 4)
                 
-                // Add a Spacer here to push all content to the top
-                Spacer(minLength: 0) // Use minLength to allow it to shrink if needed
+                Spacer(minLength: 0)
             }
-            .background(
-                LinearGradient(
-                    colors: [Color.black, Color.gray.opacity(0.3)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            // Ensure the VStack takes up all available vertical space and aligns content to the top
             .frame(maxHeight: .infinity, alignment: .top)
         }
-        .ignoresSafeArea(.all) // This ignores all safe areas including top
-        .edgesIgnoringSafeArea(.all) // Fallback for older iOS versions
+        .ignoresSafeArea(.all)
+        .edgesIgnoringSafeArea(.all)
     }
     
     func getButtonType(_ symbol: String) -> ButtonType {
@@ -298,79 +311,43 @@ struct CalculatorButton: View {
                 action()
             }) {
                 Text(symbol)
-                    .font(.system(size: min(14, availableHeight * 0.4), weight: .bold, design: .monospaced))
-                    .foregroundColor(foregroundColor)
+                    .foregroundColor(foregroundColor(for: buttonType)) // 🔥 set color here
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(backgroundGradient)
-                    .cornerRadius(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(borderColor, lineWidth: 1.0)
-                            .shadow(color: glowColor.opacity(0.3), radius: isPressed ? 2 : 1, x: 0, y: 0)
-                    )
-                    .scaleEffect(isPressed ? 0.95 : 1.0)
-                    .shadow(color: glowColor.opacity(0.2), radius: 2, x: 0, y: 0)
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(.white)
             }
             .buttonStyle(PlainButtonStyle())
-            .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isPressed = pressing
-                }
-            }, perform: {})
         }
-        .frame(height: max(24, availableHeight - 2)) // Slightly smaller button height
+        .frame(height: max(24, availableHeight - 2))
     }
     
-    var backgroundGradient: LinearGradient {
-        switch buttonType {
-        case .clear:
-            return LinearGradient(
-                colors: [Color.black, Color.red.opacity(0.2)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+    // Helper to assign colors
+    func foregroundColor(for type: ButtonType) -> Color {
+        switch type {
         case .operation:
-            return LinearGradient(
-                colors: [Color.black, Color.orange.opacity(0.3)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        case .function:
-            return LinearGradient(
-                colors: [Color.black, Color.purple.opacity(0.3)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return Color(red: 1.0, green: 0.27, blue: 0.0) // orangish red
         default:
-            return LinearGradient(
-                colors: [Color.black, Color.cyan.opacity(0.2)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            return .white
         }
-    }
-    
-    var foregroundColor: Color {
-        switch buttonType {
-        case .clear:
-            return .red
-        case .operation:
-            return .orange
-        case .function:
-            return .purple
-        default:
-            return .cyan
-        }
-    }
-    
-    var borderColor: Color {
-        foregroundColor
-    }
-    
-    var glowColor: Color {
-        foregroundColor
     }
 }
+struct BlinkingCursor: View {
+    @State private var isVisible = true
+    var body: some View {
+        Rectangle()
+            .fill(Color.black)
+            .frame(width: 2, height: 14)
+            .opacity(isVisible ? 1 : 0)
+            .onAppear {
+                withAnimation(Animation.easeInOut(duration: 0.6).repeatForever()) {
+                    isVisible.toggle()
+                }
+            }
+            .padding(.leading, 2)
+    }
+}
+
 
 #Preview {
     ContentView()
